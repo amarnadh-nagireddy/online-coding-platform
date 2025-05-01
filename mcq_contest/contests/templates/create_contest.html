@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Create Contest</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background-color: #f8f9fa;
+      }
+      h1,
+      h2 {
+        color: #007bff;
+      }
+      input,
+      textarea,
+      select {
+        width: 100%;
+        padding: 10px;
+        margin: 10px 0;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+      button {
+        background-color: #28a745;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+      }
+      button:hover {
+        background-color: #218838;
+      }
+      a {
+        text-decoration: none;
+        color: #007bff;
+      }
+      .question-block {
+        margin-bottom: 20px;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    {% if messages %} {% for message in messages %}
+    <p>{{ message }}</p>
+    {% endfor %} {% endif %}
+    <h1>Create Contest</h1>
+    <form method="POST" id="contestForm">
+      {% csrf_token %}
+      <label>Contest Name:</label><br />
+      <input type="text" name="name" required /><br /><br />
+
+      <label>Start Date and Time:</label><br />
+      <input
+        type="datetime-local"
+        name="start_datetime"
+        id="start_datetime"
+        required
+      /><br /><br />
+
+      <label>End Date and Time:</label><br />
+      <input
+        type="datetime-local"
+        name="end_datetime"
+        id="end_datetime"
+        required
+      /><br /><br />
+
+      <h2>Questions</h2>
+      <div id="questions">
+        <!-- Questions will be added here dynamically -->
+      </div>
+      <input type="hidden" name="question_count" id="questionCount" value="0" />
+      <button type="button" onclick="addQuestion()">Add Question</button
+      ><br /><br />
+
+      <button type="submit">Create Contest</button>
+    </form>
+    <a href="{% url 'admin_dashboard' %}">Back</a>
+
+    <script>
+      function getCurrentDateTime() {
+        const now = new Date();
+        return now.toISOString().slice(0, 16);
+      }
+
+      window.onload = function () {
+        const startInput = document.getElementById("start_datetime");
+        const endInput = document.getElementById("end_datetime");
+        const currentDateTime = getCurrentDateTime();
+
+        startInput.setAttribute("min", currentDateTime);
+        endInput.setAttribute("min", currentDateTime);
+
+        startInput.addEventListener("change", function () {
+          const startValue = this.value;
+          endInput.setAttribute("min", startValue);
+          if (endInput.value && endInput.value <= startValue) {
+            endInput.value = startValue;
+          }
+        });
+
+        endInput.addEventListener("change", function () {
+          if (this.value < currentDateTime) {
+            this.value = currentDateTime;
+          }
+        });
+
+        addQuestion();
+      };
+
+      let questionCounter = 0;
+
+      function addQuestion() {
+        questionCounter++;
+        document.getElementById("questionCount").value = questionCounter;
+
+        const questionDiv = document.createElement("div");
+        questionDiv.className = "question-block";
+        questionDiv.id = `question_${questionCounter}`;
+        questionDiv.innerHTML = `
+                <h3>Question ${questionCounter}</h3>
+                <label>Type:</label>
+                <select name="question_type_${questionCounter}" onchange="toggleOptions(this, ${questionCounter})">
+                    <option value="blank">Blank</option>
+                    <option value="mcq">Multiple Choice (MCQ)</option>
+                    <option value="msq">Multiple Select (MSQ)</option>
+                </select><br>
+                <label>Description:</label><br>
+                <textarea name="question_description_${questionCounter}" required></textarea><br>
+                <div id="options_${questionCounter}" class="options-block"></div>
+                <button type="button" onclick="addOption(${questionCounter})">Add Option</button><br>
+                <label>Score:</label><br>
+                <input type="number" name="question_score_${questionCounter}" value="1" min="0" required><br>
+                <label>Correct Answer:</label><br>
+                <input type="text" name="correct_answer_${questionCounter}" required><br>
+            `;
+        document.getElementById("questions").appendChild(questionDiv);
+        addOption(questionCounter);
+        addOption(questionCounter);
+      }
+
+      function addOption(questionId) {
+        const optionsDiv = document.getElementById(`options_${questionId}`);
+        const optionCount = optionsDiv.children.length;
+        if (optionCount >= 10) {
+          alert("Maximum 10 options allowed.");
+          return;
+        }
+        const optionInput = document.createElement("div");
+        optionInput.className = "option-field";
+        optionInput.innerHTML = `
+                <input type="text" name="options_${questionId}[]" placeholder="Option ${
+          optionCount + 1
+        }">
+                <button type="button" onclick="this.parentElement.remove()">Remove</button><br>
+            `;
+        optionsDiv.appendChild(optionInput);
+      }
+
+      function toggleOptions(select, questionId) {
+        const optionsDiv = document.getElementById(`options_${questionId}`);
+        if (select.value === "blank") {
+          optionsDiv.style.display = "none";
+        } else {
+          optionsDiv.style.display = "block";
+        }
+      }
+    </script>
+  </body>
+</html>

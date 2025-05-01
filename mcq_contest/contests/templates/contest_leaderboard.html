@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Leaderboard - {{ contest.name }}</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background-color: #fff;
+      }
+      h1,
+      h2 {
+        color: #007bff;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+      }
+      th,
+      td {
+        border: 1px solid #ccc;
+        padding: 10px;
+        text-align: left;
+      }
+      th {
+        background-color: #007bff;
+        color: white;
+      }
+      tr:nth-child(even) {
+        background-color: #f8f9fa;
+      }
+      a {
+        text-decoration: none;
+        color: #007bff;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Leaderboard - {{ contest.name }}</h1>
+    <p>
+      Start: {{ contest.start_datetime_display }} | End: {{
+      contest.end_datetime_display }}
+    </p>
+    <p>Participants: {{ participant_count }}</p>
+    <h2>Scores</h2>
+    <p>{{ scores|join:", " }}</p>
+    <h2>Leaderboard</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Student Name</th>
+          <th>Score</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for entry in leaderboard %}
+        <tr>
+          <td>{{ entry.student_name }}</td>
+          <td>{{ entry.score }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="2">No participants yet.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <a href="{% url 'admin_dashboard' %}">Back to Dashboard</a>
+  </body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Student Dashboard</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background-color: #fff;
+      }
+      h1,
+      h2 {
+        color: #007bff;
+      }
+      .contest-item {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        margin-bottom: 10px;
+        background-color: #f8f9fa;
+      }
+      a {
+        text-decoration: none;
+        color: #007bff;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Student Dashboard</h1>
+    <h2>Ongoing and Upcoming Contests</h2>
+    {% if contests %}
+    <ul>
+      {% for contest in contests %}
+      <li class="contest-item">
+        {{ contest.id}} {{ contest.name }} (Status: {{ contest.status }}, Start:
+        {{ contest.start_datetime_display }} | End: {{
+        contest.end_datetime_display }}) - {% if contest.status == 'Ongoing' %}
+        {% if contest.id %}
+        <a href="{% url 'attempt_contest' '67df9d5964c719267be75fd8'%}"
+          >Attempt</a
+        >
+        {% else %}
+        <span>Contest ID missing</span>
+        {% endif %} {% else %}
+        <span>Not yet available</span>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p>No ongoing or upcoming contests available.</p>
+    {% endif %}
+    <a href="{% url 'logout' %}">Logout</a>
+  </body>
+</html>

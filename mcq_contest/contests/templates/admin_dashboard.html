@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Admin Dashboard</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background-color: #fff;
+      }
+      h1,
+      h2 {
+        color: #343a40;
+      }
+      .contest-item {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        background-color: #f8f9fa;
+      }
+      .leaderboard {
+        margin-left: 20px;
+        list-style-type: none;
+      }
+      a {
+        text-decoration: none;
+        color: #007bff;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Admin Dashboard</h1>
+    <a href="{% url 'create_contest' %}">Create Contest</a>
+    <h2>All Contests</h2>
+    {% if contests %}
+    <ul>
+      {% for contest in contests %}
+      <li class="contest-item">
+        {{ contest.name }} (Start: {{ contest.start_datetime_display }} | End:
+        {{ contest.end_datetime_display }}) - Status: {{ contest.status }} -
+        Participants: {{ contest.participant_count }}
+        <br />
+        <a href="{% url 'edit_contest' contest.id %}">Edit</a> |
+        <a href="{% url 'delete_contest' contest.id %}">Delete</a> |
+        <a href="{% url 'contest_leaderboard' contest.id %}">Leaderboard</a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p>No contests available.</p>
+    {% endif %}
+    <a href="{% url 'logout' %}">Logout</a>
+  </body>
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Contest - {{ contest.name }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f8f9fa;
+        }
+        h1, h2 {
+            color: #007bff;
+        }
+        label {
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #28a745;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        a {
+            text-decoration: none;
+            color: #007bff;
+        }
+        .question-block {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    {% if messages %}
+        {% for message in messages %}
+            <p>{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+    <h1>Edit Contest: {{ contest.name }}</h1>
+    <form method="POST" id="contestForm">
+        {% csrf_token %}
+        <label>Contest Name:</label><br>
+        <input type="text" name="name" value="{{ contest.name }}" required><br><br>
+
+        <label>Start Date and Time:</label><br>
+        <input type="datetime-local" name="start_datetime" value="{{ contest.start_datetime }}" required><br><br>
+
+        <label>End Date and Time:</label><br>
+        <input type="datetime-local" name="end_datetime" value="{{ contest.end_datetime }}" required><br><br>
+
+        <label>Active:</label>
+        <input type="checkbox" name="is_active" {% if contest.is_active %}checked{% endif %}><br><br>
+
+        <h2>Questions</h2>
+        <div id="questions">
+            {% for question in contest.questions %}
+                <div class="question-block" id="question_{{ forloop.counter }}">
+                    <h3>Question {{ forloop.counter }}</h3>
+                    <label>Type:</label>
+                    <select name="question_type_{{ forloop.counter }}" onchange="toggleOptions(this, {{ forloop.counter }})">
+                        <option value="blank" {% if question.type == 'blank' %}selected{% endif %}>Blank</option>
+                        <option value="mcq" {% if question.type == 'mcq' %}selected{% endif %}>MCQ</option>
+                        <option value="msq" {% if question.type == 'msq' %}selected{% endif %}>MSQ</option>
+                    </select><br>
+                    <label>Description:</label><br>
+                    <textarea name="question_description_{{ forloop.counter }}" required>{{ question.description }}</textarea><br>
+                    <div id="options_{{ forloop.counter }}" class="options-block">
+                        {% for option in question.options %}
+                            <div class="option-field">
+                                <input type="text" name="options_{{ forloop.parentloop.counter }}[]" value="{{ option }}">
+                                <button type="button" onclick="this.parentElement.remove()">Remove</button><br>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <button type="button" onclick="addOption({{ forloop.counter }})">Add Option</button><br>
+                    <label>Score:</label><br>
+                    <input type="number" name="question_score_{{ forloop.counter }}" value="{{ question.score|default:'1' }}" min="0" required><br>
+                    <label>Correct Answer:</label><br>
+                    <input type="text" name="correct_answer_{{ forloop.counter }}" value="{{ question.answer }}" required><br>
+                </div>
+            {% endfor %}
+        </div>
+        <input type="hidden" name="question_count" id="questionCount" value="{{ contest.questions|length }}">
+        <button type="button" onclick="addQuestion()">Add Question</button><br><br>
+
+        <button type="submit">Update Contest</button>
+    </form>
+    <a href="{% url 'admin_dashboard' %}">Back</a>
+
+    <script>
+        let questionCounter = {{ contest.questions|length }};
+
+        function addQuestion() {
+            questionCounter++;
+            document.getElementById('questionCount').value = questionCounter;
+
+            const questionDiv = document.createElement('div');
+            questionDiv.className = 'question-block';
+            questionDiv.id = `question_${questionCounter}`;
+            questionDiv.innerHTML = `
+                <h3>Question ${questionCounter}</h3>
+                <label>Type:</label>
+                <select name="question_type_${questionCounter}" onchange="toggleOptions(this, ${questionCounter})">
+                    <option value="blank">Blank</option>
+                    <option value="mcq">MCQ</option>
+                    <option value="msq">MSQ</option>
+                </select><br>
+                <label>Description:</label><br>
+                <textarea name="question_description_${questionCounter}" required></textarea><br>
+                <div id="options_${questionCounter}" class="options-block"></div>
+                <button type="button" onclick="addOption(${questionCounter})">Add Option</button><br>
+                <label>Score:</label><br>
+                <input type="number" name="question_score_${questionCounter}" value="1" min="0" required><br>
+                <label>Correct Answer:</label><br>
+                <input type="text" name="correct_answer_${questionCounter}" required><br>
+            `;
+            document.getElementById('questions').appendChild(questionDiv);
+            addOption(questionCounter);
+            addOption(questionCounter);
+        }
+
+        function addOption(questionId) {
+            const optionsDiv = document.getElementById(`options_${questionId}`);
+            const optionCount = optionsDiv.children.length;
+            if (optionCount >= 10) {
+                alert('Maximum 10 options allowed.');
+                return;
+            }
+            const optionInput = document.createElement('div');
+            optionInput.className = 'option-field';
+            optionInput.innerHTML = `
+                <input type="text" name="options_${questionId}[]" placeholder="Option ${optionCount + 1}">
+                <button type="button" onclick="this.parentElement.remove()">Remove</button><br>
+            `;
+            optionsDiv.appendChild(optionInput);
+        }
+
+        function toggleOptions(select, questionId) {
+            const optionsDiv = document.getElementById(`options_${questionId}`);
+            if (select.value === 'blank') {
+                optionsDiv.style.display = 'none';
+            } else {
+                optionsDiv.style.display = 'block';
+            }
+        }
+
+        // Initialize option visibility based on question type
+        document.querySelectorAll('.question-block select').forEach(select => {
+            const questionId = select.name.split('_')[2];
+            toggleOptions(select, questionId);
+        });
+    </script>
+</body>
+</html>

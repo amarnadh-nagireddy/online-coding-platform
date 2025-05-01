@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Attempt Contest - {{ contest.name }}</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background-color: #f8f9fa;
+      }
+      h1 {
+        color: #007bff;
+      }
+      .question-block {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        background-color: #fff;
+        display: none;
+      }
+      .question-block.active {
+        display: block;
+      }
+      button {
+        background-color: #007bff;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      .score {
+        font-style: italic;
+        color: #555;
+      }
+      .messages {
+        padding: 10px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+      }
+      .messages .error {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+      .messages .success {
+        background-color: #d4edda;
+        color: #155724;
+      }
+      .nav-bar {
+        margin: 20px 0;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .nav-button {
+        padding: 8px 15px;
+        border: 1px solid #007bff;
+        border-radius: 5px;
+        cursor: pointer;
+        background-color: white;
+        color: #007bff;
+      }
+      .nav-button.active {
+        background-color: #007bff;
+        color: white;
+      }
+      .nav-button:hover {
+        background-color: #e9ecef;
+      }
+    </style>
+  </head>
+  <body>
+    {% if messages %}
+    <div class="messages">
+      {% for message in messages %}
+      <p class="{{ message.tags }}">{{ message }}</p>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <h1>{{ contest.name }}</h1>
+    <p>
+      Start: {{ contest.start_datetime_display }} | End: {{
+      contest.end_datetime_display }}<br />
+      Maximum Score: {{ contest.max_score }}
+    </p>
+
+    <!-- Navigation Bar -->
+    <div class="nav-bar">
+      {% for question in contest.questions %}
+      <button class="nav-button" onclick="showQuestion({{ forloop.counter0 }})">
+        {{ forloop.counter }}
+      </button>
+      {% endfor %}
+    </div>
+
+    <form method="POST">
+      {% csrf_token %} {% for question in contest.questions %}
+      <div class="question-block" id="question-{{ forloop.counter0 }}">
+        <h3>
+          {{ forloop.counter }}. {{ question.description }}
+          <span class="score">(Score: {{ question.score|default:'1' }})</span>
+        </h3>
+        {% if question.type == 'blank' %}
+        <input type="text" name="answer_{{ forloop.counter }}" required />
+        {% elif question.type == 'mcq' %} {% for option in question.options %}
+        <input
+          type="radio"
+          name="answer_{{ forloop.counter }}"
+          value="{{ option }}"
+          required
+        />
+        {{ option }}<br />
+        {% endfor %} {% elif question.type == 'msq' %} {% for option in
+        question.options %}
+        <input
+          type="checkbox"
+          name="answer_{{ forloop.counter }}[]"
+          value="{{ option }}"
+        />
+        {{ option }}<br />
+        {% endfor %} {% endif %}
+      </div>
+      {% endfor %}
+      <button type="submit">Submit Answers</button>
+    </form>
+    <a href="{% url 'student_dashboard' %}">Back</a>
+
+    <script>
+      // Show first question by default
+      document.addEventListener("DOMContentLoaded", function () {
+        showQuestion(0);
+      });
+
+      function showQuestion(index) {
+        // Hide all questions
+        const questions = document.querySelectorAll(".question-block");
+        questions.forEach((q) => q.classList.remove("active"));
+
+        // Deactivate all nav buttons
+        const navButtons = document.querySelectorAll(".nav-button");
+        navButtons.forEach((btn) => btn.classList.remove("active"));
+
+        // Show selected question and activate its nav button
+        document.getElementById(`question-${index}`).classList.add("active");
+        navButtons[index].classList.add("active");
+      }
+    </script>
+  </body>
+</html>
