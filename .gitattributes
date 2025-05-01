@@ -1,2 +1,5 @@
-# Auto detect text files and perform LF normalization
+# Automatically normalize line endings for text files
 * text=auto
+
+# Force Windows-style line endings for specific files if needed
+*.bat text eol=crlf
